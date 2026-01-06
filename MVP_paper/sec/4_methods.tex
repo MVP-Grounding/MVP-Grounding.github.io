@@ -1,0 +1,281 @@
+\section{Methods}
+\begin{figure*}
+  \centering
+  \begin{subfigure}{0.95\linewidth}
+    \includegraphics[width=\linewidth]{pics/arch.pdf}
+    \label{fig:instable_example}
+  \end{subfigure}
+  \vspace{-15pt}
+  \caption{Overview of our Multiple View Prediction (MVP) pipeline, which consists of two main stages: Attention-Guided View Proposal and Multi-Coordinate Clustering. First, MVP takes the user instruction and screenshot, forwarding through the language model to derive attention scores from the instruction to each visual token. Then the top-k scores tokens are selected, and an h×w sub-region is cropped around the center of each corresponding visual patch. These sub-regions are ranked by the number of top-k tokens they contain. The top-m regions are chosen and enlarged to form the final set of views. The model independently predicts coordinates for each view. Finally, MVP aggregates all the predictions by clustering the coordinates based on spatial proximity and outputs the center of the largest cluster as the final prediction.}
+  \label{fig:archtecture}
+\end{figure*}
+In this section, we propose the training-free Multiple View Prediction (MVP) framework to address the identified instability issues. The MVP framework consists of two main components: (1) Attention-Guided View Proposal identifies sub-regions containing the target bounding box and generates different views, reducing input resolution and enhancing small target visibility (2) Multi-Coordinate Clustering aggregates the predictions from multiple views and determines the final coordinates, identifying the spatially consistent cluster to filter out outliers and enhance robustness.
+
+\subsection{Attention-Guided View Proposal}
+% % The goal of this module is to derive different views from a given high-resolution screenshot. For low-resolution images, we directly add few-pixels-borders to the top, bottom, left, or right of the image to get views and skip for this process.
+
+% Multimodal large language models possess strong text-visual alignment capabilities. The text-to-visual attention scores in middle-to-deep layers can effectively locate regions containing target bounding boxes based on user instructions~\cite{flexselect,prunevid,pyramiddrop,attentiondriven}. We leverage this capability to identify promising sub-regions containing target UI elements as views.
+
+% \paragraph{Attention Score Computation} Given that inputs consist of a system prompt, GUI image, and user instruction, the model outputs the coordinates in the format ``(x, y)''. As explained in Appendix, we find that using the center comma token ``,'') as the query token, combined with image tokens as key tokens, yields superior region localization. Let $V \in \mathbb{R}^{L_v \times d}$ represent the image visual tokens and $T_{\text{comma}}$ represent the comma token. The cross-attention scores are computed as:
+
+% \begin{equation}
+%     A = \text{Softmax}\left(\frac{T_{comma}V^T}{\sqrt{d_k}}\right), A \in \mathbb{R}^{H \times L_v}
+% \end{equation}
+% \begin{equation}
+%     \text{scores} = \frac{1}{H}\sum_{i=1}^{H} A[i, :], \quad \text{scores} \in \mathbb{R}^{L_v}
+% \end{equation}
+% where $L_v$ is the length of image tokens, $H$ is the number of attention heads, $d_k$ is the dimension of the key vectors.
+
+% \paragraph{Sub-region Selection} We select the top-$k$ visual tokens with the highest attention scores. For each selected token, we crop a region of size $h \times w$ centered at the token's corresponding visual patch center $(x_i, y_i)$, getting $k$ candidate regions:
+
+% \begin{equation}
+%     R_i = \text{Crop}\left(I, x_i - \frac{w}{2}, y_i - \frac{h}{2}, w, h\right), i \in [1,k]
+% \end{equation}
+
+% where $I$ represents the original GUI image, and $\text{Crop}(I, x, y, w, h)$ extracts a rectangular region from the image.
+
+% \paragraph{Region Ranking and Resizing} To prioritize regions most likely to contain the target bounding box, we count the number of top-$k$ visual tokens within each candidate region and rank regions accordingly. The ranking score for region $R_i$ is computed as:
+
+% \begin{equation}
+%     \text{rank}(R_i) = \sum_{j=1}^{k} \mathbb{I}[\text{token}_j \in R_i]
+% \end{equation}
+
+% We select the top-$m$ regions and resize them bigger, ensuring the resized regions remain smaller than the original image resolution while providing enhanced detail that helps the model better identify and locate small target elements:
+
+% \begin{equation}
+%     R_i^{\text{resized}} = \text{Resize}(R_i, \alpha h, \alpha w), \alpha > 1
+% \end{equation}
+
+
+This module aims to generate multiple views by locating sub-regions that contain the target UI elements, guided by cross-attention scores. It leverages the strong text-visual alignment capability of LVLMs, whose attention mechanisms in middle-to-deep layers can effectively localize instruction-relevant regions~\cite{flexselect,prunevid,pyramiddrop,attentiondriven}. Given the system prompt, a GUI screenshot, and the user instruction, this module outputs $m$ cropped image regions. The process consists of three main steps: Attention Score Computation, Candidate Sub-region Selection, and Region Ranking \& Resizing.
+
+\textbf{Attention Score Computation.} We compute the cross-attention scores using the text token as the query and the visual tokens as the keys. Specifically, we use the center comma token (``,'') from the predicted coordinate format (e.g. ``(123,456)'') as the query token, as it demonstrates better region localization performance, with further analysis provided in the Appendix. Let $V \in \mathbb{R}^{H \times L_v \times d}$ represent the visual tokens and $T_{\text{comma}} \in \mathbb{R}^{H \times 1 \times d}$ denote the comma token. The cross-attention scores are computed as:
+\begin{equation}
+A = \text{Softmax}\left(\frac{T_\text{comma}V^T}{\sqrt{d}}\right), A \in \mathbb{R}^{H \times L_v}
+\label{eq:1}
+\end{equation}
+The final attention score assigned to each visual token is obtained by averaging across all attention heads:
+\begin{equation}
+\text{scores} = \frac{1}{H}\sum_{i=1}^{H} A[i, :], \quad \text{scores} \in \mathbb{R}^{L_v}
+\label{eq:2}
+\end{equation}
+where $L_v$ is the number of visual tokens, $H$ is the number of attention heads, and $d$ is the dimension of the model.
+
+\textbf{Candidate Sub-region Selection.} We select $k$ candidate regions based on the computed attention scores. Specifically, we choose the top-$k$ visual tokens with the highest scores. Let \( \mathcal{T} = \{ (t_j, x_j, y_j) \mid j=1,\dots,k \} \) denote the set of top-$k$ visual tokens and their corresponding patch center coordinates, for each top-$k$ token, we crop an $h \times w$ sub-region centered at $(x_i, y_i)$ in the original image, resulting in $k$ candidate regions:
+\begin{equation}
+R_i = \text{Crop}\left(I, x_i - \frac{w}{2}, y_i - \frac{h}{2}, w, h\right), \quad i \in [1,k]
+\label{eq:3}
+\end{equation}
+where $I$ is the original GUI image and $\text{Crop}(I, x, y, w, h)$ function extracts a rectangular region.
+
+\textbf{Region Ranking \& Resizing.} We select $m$ regions from $k$ candidates to form the final views. Regions containing more top-k visual tokens are considered more likely  to contain the target bounding box. We rank the candidate regions by the number of these tokens whose patch center coordinates fall within the region, and choose the top-$m$ regions:
+\begin{equation}
+\text{rank}(R_i) = \sum_{j=1}^{k} \mathbb{I} \left[ (x_j, y_j) \in R_i \right], i \in [1,k]
+\label{eq:4}
+\end{equation}
+
+Considering small UI elements poses more instability to grounding models (Section~\ref{sec:reason}), we enlarge the selected regions to enhance the visibility of small targets:
+\begin{equation}
+R_i^{\text{resized}} = \text{Resize}(R_i, \alpha h, \alpha w), \quad \alpha > 1
+\label{eq:5}
+\end{equation}
+
+
+\begin{algorithm}[t]
+\caption{Attention-Guided View Proposal}
+\label{alg:attention_cropping}
+
+\begin{algorithmic}[1]
+\Require Text instruction $T$, original image $I$, view size $(h, w)$, view number $m$, resize ratio $\alpha$
+\Ensure Candidate views set $\mathcal{V} = \{R_1^{\text{resized}}, \ldots, R_m^{\text{resized}}\}$
+
+\State \textbf{1. Attention Score Computation}
+\State Extract visual tokens $V \in \mathbb{R}^{H \times L_v \times d}$ from $I$
+\State Get comma token $T_{\text{comma}} \in \mathbb{R}^{H \times 1 \times d}$ as query token
+\State Use Eq~\ref{eq:1}. and Eq~\ref{eq:2}. to compute attention scores
+
+
+\State \textbf{2. Candidate Sub-region Selection}
+\State Sort visual tokens by scores in descending order
+\State Select top-$k$ tokens: $\text{tokens} = \{t_1, t_2, \ldots, t_k\}$
+\State Get corresponding positions: $\{(x_1, y_1), \ldots, (x_k, y_k)\}$
+
+\State Initialize empty region set $\mathcal{R} = \emptyset$
+\For{each selected token $t_i$ at position $(x_i, y_i)$}
+    \State  Crop candidate region $\{R_i\}$ using Eq~\ref{eq:3}.
+    \State Compute ranking score $rank(R_i)$ using Eq~\ref{eq:4}.
+    \State $\mathcal{R} = \mathcal{R} \cup \{R_i\}$
+\EndFor
+
+\State \textbf{3. Region Ranking \& Resizing}
+\State Sort regions by ranking scores: $R_{(1)}, R_{(2)}, \ldots, R_{(k)}$
+\State Select top-$m$ regions: $\mathcal{V} = \{R_{(1)}, \ldots, R_{(m)}\}$
+\State Resize each region $R_{(i)}$ in selected set using Eq~\ref{eq:5}.
+%     \State $R_{(i)}^{\text{resized}} = \text{Resize}(R_{(i)}, \alpha h, \alpha w)$
+% \EndFor
+
+\State \Return $\mathcal{V}$
+\end{algorithmic}
+\end{algorithm}
+
+
+\subsection{Multi-Coordinate Clustering}
+% The inherent instability of single inference necessitates multi-ensemble aggregating to mitigate it. After obtaining $m$ sub-regions through the cropping module, we perform inference on each sub-region along with the original full image, yielding $m+1$ coordinates $\{(x_i, y_i)\}_{i=1}^{m+1}$. The goal of this module is to determine the final result.
+This module takes the $m$ cropped views as input and outputs the final predicted coordinate. It firstly performs inference on each of the $m$ views along with the original full image, yielding $m+1$ coordinate predictions ${(x_i, y_i)}_{i=1}^{m+1}$, then identifies the correct prediction by clustering spatially consistent coordinates and filtering out outliers. This process consists of two steps: Coordinate Clustering and Final Prediction Decision.
+
+\paragraph{Coordinate Clustering} 
+% We first group predictions based on spatial proximity using a distance threshold $\tau$. If the distance between two coordinates falls below $\tau$, they are assigned to the same cluster. Formally, for any two predictions $p_i = (x_i, y_i)$ and $p_j = (x_j, y_j)$:
+We cluster the coordinate predictions using K-means based on the distance. 
+The metric between any two predictions $p_i$ and $p_j$ is calculated as:
+\begin{equation}
+d(p_i, p_j) = \sqrt{(x_i - x_j)^2 + (y_i - y_j)^2}
+\end{equation}
+
+% \begin{equation}
+%     d(p_i, p_j) = \sqrt{(x_i - x_j)^2 + (y_i - y_j)^2} < \tau \Rightarrow p_i, p_j \in G_k
+% \end{equation}
+
+
+\paragraph{Final Prediction Decision} The reliability of a prediction cluster $G_k$ is determined by its size $|G_k|$—while incorrect predictions may scatter arbitrarily, correct ones are spatially consistent as they all fall within the target bounding box. We select the center coordinates of the largest cluster as the final prediction:
+
+\begin{equation}
+    G^* = \arg\max_{G_k} |G_k|, \quad (x_{\text{final}}, y_{\text{final}}) = \frac{1}{|G^*|}\sum_{p_i \in G^*} p_i
+    \label{eq:7}
+\end{equation}
+
+In cases when multiple clusters have the same maximum size, we leverage the attention-based ranking for decision, selecting the cluster whose points corresponding regions containing the most top-$k$ visual tokens:
+
+\begin{equation}
+G^* = \arg \max_{G_k \in G} \sum{\text{rank}(R_i)}, p_i \in G_k
+\label{eq:8}
+\end{equation}
+
+
+
+
+% \begin{algorithm}[t]
+% \caption{Multi-Coordinate Clustering}
+% \label{alg:coordinate_clustering}
+
+% \begin{algorithmic}[1]
+% \Require Distance threshold $\tau$, coordinate predictions set $\mathcal{C} = \{(x_1, y_1), (x_2, y_2), \ldots, (x_{m+1}, y_{m+1})\}$
+% \Ensure Final output coordinate $(x_{\text{final}}, y_{\text{final}})$
+
+% \State Initialize empty cluster set: $\mathcal{G} = \emptyset$
+% \State Create list of unassigned predictions: $U = \mathcal{C}$
+
+% \State \textbf{1. Coordinate Clustering}
+% \While{$U$ is not empty}
+%     \State Select first unassigned prediction: $p_{\text{seed}} = U[0]$
+%     \State Initialize new cluster: $G = \{p_{\text{seed}}\}$
+%     \State Remove $p_{\text{seed}}$ from $U$
+%     \Repeat
+%         \State $G_{\text{new}} = G$
+%         \For{each prediction $p$ in $U$}
+%             \State  $\text{centroid} = \frac{1}{|G|}\sum_{p_i \in G} p_i$
+%             \State  $d_{\text{to\_centroid}} = ||p - \text{centroid}||_2$
+           
+%             \If{$d_{\text{to\_centroid}} \leq \tau$}
+%                 \State Add $p$ to cluster: $G = G \cup \{p\}$
+%                 \State Remove $p$ from $U$
+%             \EndIf
+%         \EndFor
+%     \Until{$G = G_{\text{new}}$}  % No more points can be added
+    
+%     \State Add cluster to set: $\mathcal{G} = \mathcal{G} \cup \{G\}$
+% \EndWhile
+
+% \State \textbf{2. Final Prediction Decision}
+% \If{there exists only one cluster with most coordinates}
+%     \State $G^* = \arg\max_{G_i \in \mathcal{G}} |G_i|$
+% \Else
+%     \State $G^* = \arg \max_{G_k \in \mathcal{G}} \sum{\text{rank}(R_i)}, p_i \in G_k$
+% \EndIf
+%  \State$(x_{\text{final}}, y_{\text{final}}) = \frac{1}{|G^*|}\sum_{(x_i, y_i) \in G^*} (x_i, y_i)$
+% \State \Return $(x_{\text{final}}, y_{\text{final}})$
+% \end{algorithmic}
+% \end{algorithm}
+
+
+
+\begin{algorithm}[t]
+\caption{Multi-Coordinate Clustering}
+\label{alg:coordinate_clustering}
+
+\begin{algorithmic}[1]
+\Require Distance threshold $\tau$, coordinate set $\mathcal{C} = \{p_1, p_2, \dots, p_{m+1}\}$
+\Ensure Final coordinate $p_{\text{final}}$
+
+\State \textbf{Step 1: Cluster coordinates}
+\State Initialize clusters $\mathcal{G} = \{\}$, unassigned $U = \mathcal{C}$
+\While{$U \neq \emptyset$}
+    \State $p_{\text{seed}} \gets U[0]$, $G \gets \{p_{\text{seed}}\}$, $U \gets U \setminus \{p_{\text{seed}}\}$
+    \Repeat
+        \State $G_{\text{prev}} \gets G$
+        \For{$p \in U$}
+            \State $\text{center} \gets \frac{1}{|G|} \sum_{q \in G} q$
+            \If{$\|p - \text{center}\|_2 \leq \tau$}
+                \State $G \gets G \cup \{p\}$, $U \gets U \setminus \{p\}$
+            \EndIf
+        \EndFor
+    \Until{$G = G_{\text{prev}}$}
+    \State $\mathcal{G} \gets \mathcal{G} \cup \{G\}$
+\EndWhile
+
+\State \textbf{Step 2: Final Prediction Decision}
+\State $G^* = \arg\max_{G \in \mathcal{G}} |G|$
+\If{$\exists$ multiple $G$ with max size}
+    \State $G^* = \arg \max_{G_k \in G} \sum{\text{rank}(R_i)}, p_i \in G_k$
+\EndIf
+\State $p_{\text{final}} = \frac{1}{|G^*|}\sum_{p_i \in G^*} p_i$
+\State \Return $p_{\text{final}}$
+\end{algorithmic}
+\end{algorithm}
+
+\begin{table*}[t]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{9pt}
+\begin{tabular}{@{}lccccccc@{}}
+\toprule
+\textbf{Model} & \textbf{Development} & \textbf{Creative} & \textbf{CAD} & \textbf{Scientific} & \textbf{Office} & \textbf{OS} & \textbf{Overall} \\
+\midrule
+\rowcolor{gray!15} \multicolumn{8}{c}{\textbf{Closed-source Models}} \\
+GPT-4o~\cite{gpt4o} & 0.7 & 0.6 & 1.5 & 1.2 & 0.9 & 0.0 & 0.8 \\
+Claude Computer Use~\cite{claude} & 12.6 & 16.8 & 11.9 & 25.8 & 26.9 & 8.1 & 17.1 \\
+UI-TARS-1.5~\cite{ui-tars-15-seed} & 63.9 & 50.4 & 58.2 & 69.3 & 79.6 & 51.0 & 61.6 \\
+Seed1.5-VL~\cite{seedvl1.5} & 53.8 & 59.2 & 59.0 & 61.4	 & 74.8 & 60.2 & 60.9 \\
+\midrule
+\rowcolor{blue!15} \multicolumn{8}{c}{\textbf{Open-Source Models}} \\
+SeeClick-7B~\cite{seeclick} & 0.3 & 0.6 & 1.9 & 2.0 & 0.9 & 1.5 & 1.1 \\
+UGround-V1-7B~\cite{uground} & 28.1 & 31.7 & 14.6 & 39.0 & 49.6 & 24.5 & 31.1 \\
+UGround-V1-72B~\cite{uground} & 31.1 & 35.8 & 13.8 & 50.0 & 51.3 & 25.5 & 34.5 \\
+Qwen2.5-VL-32B-Instruct~\cite{qwen25vl} & 48.8 & 42.2 & 31.0 & 55.5 & 64.3 & 50.5 & 48.0 \\
+RegionFocus (Qwen2.5VL-72B)~\cite{testtime} & 51.2 & 57.2 & 60.9 & 66.5 & 80.9 & 57.1 & 61.6 \\
+% GTA1-32B~\cite{gta1} & 56.2 & 46.3 & 38.7 & 59.1 & 72.2 & 53.1 & 53.6 \\
+GTA1-72B~\cite{gta1} & 57.2 & 51.0 & 49.8 & 63.0 & 77.0 & 57.1 & 58.4 \\
+GUI-Actor-2.5VL-7B~\cite{guiactor}& 38.1 & 41.3 & 38.3 & 50.8 & 63.0 & 38.8 & 44.6 \\ 
+SE-GUI-7B~\cite{segui} & 44.5 & 37.2 & 42.1 & 54.7 & 70.4 & 38.8 & 47.2 \\
+UI-Venus-72B~\cite{uivenus} & 59.5 & 55.4 & 57.5 & 66.5 & 77.8 & 57.7 & 61.9 \\
+V2P-7B~\cite{v2p} & 46.8 & 43.1 & 47.1 & 56.3 & 68.3 & 45.4 & 50.6 \\ 
+GMS (Gemini-2.5-Flash-Lite)~\cite{scanner} & 44.8 & 54.8 & 57.5 & 55.9 & 70.4 & 44.9 & 54.6 \\
+GUI-Spotlight~\cite{guispotlight} & 53.3 & 44.4 & 51.0 & 52.4 & 71.3 & 46.9 & 52.8 \\
+GUI-Cursor-7B~\cite{guicursor} & 57.5 & 45.8 & 53.2 & 61.4 & 74.8& 50.0& 56.5\\
+UI-INS-32B~\cite{uiins} & 55.8 & 46.4 & 48.4 & 62.2& 80.0& 54.1 & 57.0 \\
+HyperClick~\cite{hyperclick} & 46.9 & 45.1 &48.5& 56.7& 60.9& 40.8& 48.2 \\
+\midrule
+UI-TARS-1.5-7B & 36.4 & 38.1 & 20.5 & 49.6 & 68.7 & 31.5 & 41.9 \\
++ MVP & 51.8\textcolor{red}{$\uparrow$15.4} & 50.0\textcolor{red}{$\uparrow$11.9} & 53.3\textcolor{red}{$\uparrow$32.8} & 57.9\textcolor{red}{$\uparrow$8.3} & 73.0\textcolor{red}{$\uparrow$4.3} & 54.6\textcolor{red}{$\uparrow$23.1} & 56.1\textcolor{red}{$\uparrow$14.2} \\
+GTA1-7B & 43.4 & 44.8 & 44.4 & 55.9 & 74.8 & 35.2 & 49.8 \\
++ MVP  & 58.9\textcolor{red}{$\uparrow$15.5} & 52.6\textcolor{red}{$\uparrow$7.8} & 60.2\textcolor{red}{$\uparrow$15.8} & 63.0\textcolor{red}{$\uparrow$7.1} & 79.1\textcolor{red}{$\uparrow$4.3} & 56.1\textcolor{red}{$\uparrow$20.9} & 61.7\textcolor{red}{$\uparrow$11.9} \\
+Qwen3VL-8B-Instruct & 52.8 & 49.1 & 49.0 & 56.7 & 75.2 & 50.5 & 55.0 \\
++ MVP  & 61.5\textcolor{red}{$\uparrow$8.7} & 60.2\textcolor{red}{$\uparrow$11.1} & 61.3\textcolor{red}{$\uparrow$12.3} & 67.3\textcolor{red}{$\uparrow$10.6} & 82.6\textcolor{red}{$\uparrow$7.4} & 62.8\textcolor{red}{$\uparrow$12.3} & 65.3\textcolor{red}{$\uparrow$10.3} \\
+Qwen3VL-32B-Instruct & 43.1 & 54.4 & 57.5 & 62.6 & 73.0 & 42.3 & 55.3 \\
++ MVP  & \textbf{71.6}\textcolor{red}{$\uparrow$28.5} & \textbf{69.3}\textcolor{red}{$\uparrow$14.9} & \textbf{74.7}\textcolor{red}{$\uparrow$17.2} & \textbf{70.5}\textcolor{red}{$\uparrow$7.9} & \textbf{87.4}\textcolor{red}{$\uparrow$14.4} & \textbf{73.5}\textcolor{red}{$\uparrow$31.2} & \textbf{74.0}\textcolor{red}{$\uparrow$18.7} \\
+\bottomrule
+\end{tabular}
+\vspace{4pt}
+\caption{Evaluation results on the ScreenSpot-Pro benchmark. Baseline models are evaluated using official instructions, while other models' results are sourced from the benchmark leaderboard. Our method shows significant performance improvements across all categories. These consistent gains across diverse model architectures validate MVP's effectiveness in addressing high-resolution GUI grounding challenges through its multi-view prediction mechanism.}
+\label{tab:sspro}
+\vspace{-10pt}
+\end{table*}

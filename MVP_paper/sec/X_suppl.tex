@@ -1,0 +1,160 @@
+\clearpage
+\setcounter{page}{1}
+\maketitlesupplementary
+
+
+\section{Details About Attention Heuristic Cropping}
+This section details our exploration of leveraging attention scores to better locate regions containing target UI elements in screenshots. Large Vision-Language Models (LVLMs) inherently possess strong text-visual alignment capabilities. Prior work indicates that text-to-vision attention scores from specific decoder layers can effectively locate instruction-relevant visual patches~\cite{flexselect,attentiondriven}. Furthermore, models adaptively adjust the attention assigned to visual tokens during text generation~\cite{dycoke}. Denoting the visual tokens as $V \in \mathbb{R}^{L_v \times d}$, we experiment with different text tokens as queries to compute the attention scores:
+
+\begin{itemize}
+    \item Using all instruction tokens $T_{\text{instruct}}$ as queries, averaging the final scores over the text length dimension.
+    \item Using the first generated token ``\textless im\_start\textgreater'' as the query.
+    \item Using the comma token from the generated coordinate format ``(x, y)'' as the query, an insight inspired by GUI-Actor~\cite{guiactor}.
+    \item Using the final generated token ``\textless im\_end\textgreater'' as the query.
+\end{itemize}
+
+We conduct experiments with GTA1-7B on the ScreenSpot-Pro benchmark. Following the cropping procedure described in Section 3.1, we derive attention scores from the 20th decoder layer, set $k=100$ and $m=4$, and then evaluate two metrics: the ratio of top-$m$ regions containing the target bounding box, and the final grounding accuracy after clustering.
+
+\begin{table}[H]
+\centering
+\footnotesize
+\begin{tabular}{lcc}
+\hline
+Query Tokens & Target BBox Containing Ratio & SS-Pro Avg. \\
+\hline
+$T_{\text{instruct}}$ & 79.5\% & 60.5\\
+$T_{\text{\textless im\_start\textgreater}}$ & 73.1\% & 52.2 \\
+$T_{\text{\textless im\_end\textgreater}}$ & 50.9\% & 33.3 \\
+$T_{\text{comma}}$ & \textbf{83.4\%} & \textbf{61.7} \\
+\hline
+\end{tabular}
+\caption{Comparison of cross-attention scores computed using different query tokens. The comma token yields the best performance and is therefore chosen as our default setting.}
+\label{tab:performance_comparison}
+\vspace{-15pt}
+\end{table}
+
+Our results(Table~\ref{tab:performance_comparison}) show that using the comma token as the query yields the best localization performance, with 83.4\% of the 4 selected views containing the target bounding box, which also translates to the highest final grounding accuracy. Consequently, we adopt this as our default configuration.
+
+
+\section{Coordinate Selection via Trained Model}
+In this section, we explore an alternative to clustering: training a dedicated model to select the correct coordinate from multiple candidate predictions. The motivation stems from Figure 1(b), which shows that the probability of having at least one correct prediction among the views (Pass@N) increases with the number of views. However, as shown in Table~\ref{tab:cluster_vs_passn}, while our clustering method significantly surpasses the single-view baseline, its accuracy remains lower than the Pass@N upper bound. This indicates a potential performance gap that could be bridged by a perfect selection model.
+
+\begin{table}[H]
+\centering
+\footnotesize
+\begin{tabular}{lcc}
+\hline
+View Number & Clustering Acc & Pass@N Acc \\
+\hline
+2 & 61.0 & 69.0 \\
+4 & 61.7 & 70.2 \\
+10 & 60.6 & 73.0 \\
+\hline
+\end{tabular}
+\caption{Comparison between clustering accuracy and Pass@N accuracy. The gap indicates the potential room for improvement with an ideal selection model.}
+\label{tab:cluster_vs_passn}
+\vspace{-15pt}
+\end{table}
+
+\paragraph{Data Preparation}
+We utilize the open-source GUI grounding dataset from GTA1~\cite{gta1}. The data is firstly filtered with the following rules: (1) image resolution larger than $2560 \times 1440$; (2) bounding box area smaller than $500$ $\text{pixels}^2$. This process yields approximately 20k samples. For each sample, we annotate 2-4 distinct red points on the image, each with a numerical label, as shown in Figure~\ref{fig:premi}. One point is placed within the target bounding box, while the others are randomly distributed outside it. The annotation metadata, including the instruction, target bounding box, point coordinates, and the image, is saved for training.
+
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.98\linewidth]{pics/output.png}
+  \caption{Example of annotated image. We annotate 2-4 visible red dots with corresponding numerical label for each sample. The model is trained to directly output the correct label.}
+  \label{fig:premi}
+  \vspace{-15pt}
+\end{figure}
+\begin{figure*}[t]
+  \centering
+  \begin{subfigure}{0.95\linewidth}
+    \includegraphics[width=\linewidth]{pics/example2.pdf}
+    \label{fig:supp_example1}
+  \end{subfigure}
+  \vspace{-15pt}
+  \caption{Multi-view example from SS-Pro evaluated by GTA1-7B. Instruction is ``change to export workspace''.}
+  \vspace{-15pt}
+\end{figure*}
+\paragraph{Model Training}
+We employ GRPO (Guided Reinforcement Policy Optimization) to train a model to directly output the numerical label of the correct point. The model takes the annotated image and user instruction as input. The rule-based reward is defined as follows: if the model outputs the correct point label, the reward is 1; otherwise, it is 0. We use Qwen3VL-4B-Instruct as the base model and train it on 8 A6000 GPUs, with 8 rollouts per group and a gradient accumulation step of 32, for a total of 170 optimization steps. The average reward converged, rising from 0.47 to 0.68.
+
+\begin{tcblisting}{
+    listing only,
+    listing engine=listings,
+    listing options={
+        basicstyle=\footnotesize\ttfamily,
+        breaklines=true,
+        columns=fullflexible,
+        backgroundcolor=\color{blue!5!white},
+        frame=none,
+        numbers=none
+    },
+    colback=blue!5!white,
+    colframe=blue!75!black,
+    title=Prompt For Coordinate Selection Model,
+    fonttitle=\bfseries,
+    width=\linewidth,
+    listing remove caption=true
+}
+System Prompt:
+You are an expert UI element verifier. Given a original GUI screenshot, the GUI screenshot annotated with some numbered candidate points (each marked with a red dot and a corresponding number label under the dot) and  a user's instruction, you are expected to choose single most appropriate point that user most likely to click based on the instruction step by step. Return the annotated number under the optimal point in bracket: [Number].
+
+User Prompt:
+Instruction + Annotated Image
+
+Output Format:
+[Number Label]
+\end{tcblisting}
+\label{fig:prompt_coordinate_selection}
+
+\paragraph{Evaluation and Analysis}
+We evaluate the trained model by having it determine the final coordinate from multiple view predictions, with the expectation that it could achieve performance close to the Pass@N upper bound. Specifically, after obtaining coordinate predictions from diverse views, we annotate them as red dots with number labels on the screenshot and prompt the trained model to generate the label of the point a user is most likely to click based on the instruction.
+
+\begin{table}[H]
+\centering
+\footnotesize
+\begin{tabular}{lcc}
+\hline
+Base Model & Aggregation Method & SS-Pro Avg. \\
+\hline
+GTA1-7B & Qwen3VL-4B-Instruct & 60.5 \\
+GTA1-7B & Qwen3VL-4B-Instruct (Trained) & 62.8 \\
+GTA1-7B & Clustering (Ours) & \textbf{61.7} \\
+Qwen3VL-8B-Instruct & Qwen3VL-4B-Instruct  & 62.7 \\
+Qwen3VL-8B-Instruct & Qwen3VL-4B-Instruct (Trained) & 65.3 \\
+Qwen3VL-8B-Instruct & Clustering (Ours) & \textbf{65.5} \\
+\hline
+\end{tabular}
+\caption{Performance comparison when using another LVLM versus our clustering method for coordinate aggregation. The training improves performance of selector model over it's baseline, but still fails to consistently outperform the simple clustering.}
+\label{tab:selector_vs_cluster}
+\vspace{-15pt}
+\end{table}
+
+
+As shown in Table~\ref{tab:selector_vs_cluster}, the trained selector model fails to consistently surpass our clustering method. While it shows a minor improvement, it is outperformed by clustering in the critical comparison with Qwen3VL-8B-Instruct. This result suggests that training a separate model for this selection task is not an effective strategy, as the performance gain is marginal and inconsistent, failing to justify the additional complexity and training cost. The clustering method remains a more robust and reliable aggregation strategy. 
+
+
+\section{Case Study}
+
+
+\begin{figure*}[t]
+  \centering
+  \begin{subfigure}{0.95\linewidth}
+    \includegraphics[width=\linewidth]{pics/example3.pdf}
+    \label{fig:supp_example2}
+  \end{subfigure}
+  \vspace{-15pt}
+  \caption{Multi-view example from SS-Pro evaluated by GTA1-7B. Instruction is ``find text on the page".}
+\end{figure*}
+
+\begin{figure*}[t]
+  \centering
+  \begin{subfigure}{0.95\linewidth}
+    \includegraphics[width=\linewidth]{pics/example1.pdf}
+    \label{fig:supp_example3}
+  \end{subfigure}
+  \vspace{-15pt}
+  \caption{Multi-view example from SS-Pro  evaluated by GTA1-7B. Instruction is ``zoom in the image in pycharm".}
+\end{figure*}

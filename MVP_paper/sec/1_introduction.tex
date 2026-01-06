@@ -1,0 +1,79 @@
+\section{Introduction}
+The development of automated agents for graphical user interfaces (GUIs) represents a pivotal frontier in artificial general intelligence (AGI) research~\cite{mllmbasedguiagents,brainedgui,gpt4twebagent,guiagents,guiagentssurvey}. These agents fundamentally rely on GUI grounding, which mappings natural language instructions to their corresponding actionable elements within screenshots or live interfaces~\cite{winspot,visualwebbench,sspro,mmbench}.
+
+GUI grounding models are built upon Large Vision Language Models (LVLMs), typically formulating GUI grounding as a generation task, where models output pixel coordinates as text tokens (e.g., “x=123, y=456”)~\cite{seeclick, uitars,cogagent}. However, it is inherently challenging for language models to establish a robust correspondence between visual elements and text coordinates tokens based on instructions~\cite{guigroundingexplicit,guiactor,spatialgui}. Despite extensive training on GUI images through supervised fine-tuning (SFT) or reinforcement learning (RL), grounding models still generate unexplainable erroneous coordinates, particularly when facing high-resolution images and small target UI elements that are difficult to identify.
+
+%This paragraph introduce prediction instability
+We carefully analyze the failure cases and discover that an incorrect prediction does not mean the model lacks the capability to locate the target. Rather, the models suffer from \textbf{prediction instability}, where minimal perturbations to input images (e.g., shifting by a few pixels) cause dramatic changes in predicted coordinates.
+As shown in Figure~\ref{fig:analysis}(a), such minor visual variations can flip predictions between correct and incorrect states, revealing high sensitivity to input perturbations.
+
+
+%, the model's predicted coordinates change dramatically. This variation may transform an incorrect prediction into a correct one, or conversely, turn a correct prediction into an incorrect one. 
+
+
+
+\begin{figure*}[t]
+  \centering
+  \begin{subfigure}{0.36\linewidth}
+    \includegraphics[width=\linewidth]{pics/fig1.pdf}
+    \label{fig:instable_example}
+    \caption{Example of prediction instability.}
+    
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}{0.31\linewidth}
+    \includegraphics[width=\linewidth]{pics/overall_accuracy_vs_views.png}
+    \caption{Pass@N increases with number of views.}
+    \label{fig:acc_increse}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}{0.31\linewidth}
+    \includegraphics[width=\linewidth]{pics/multi_model_radar_comparison_grouped.png}
+    \caption{MVP significantly boosts performance.}
+    \label{fig:show_rst}
+  \end{subfigure}
+  
+  \caption{(a) An example of model's prediction instability from ScreenSpot-Pro. The instruction is ``save image in a specific format''. Slightly shifting the screenshot causes significantly different predicted coordinates. (b) We crop different views from the original screenshots in ScreenSpot-Pro and then perform inference separately on them using GTA1-7B. The pass@N accuracy improves with number of views increasing, indicting the model possessing the ability to predict the correct prediction. (c) Our MVP significantly improves performance of different architectures and sizes grounding models by aggregating results of different views.}
+  \label{fig:analysis}
+\end{figure*}
+
+%TODO
+%Such instability undermines the model's inherent grounding capability. 
+
+%This paragraph show instability undermines the performance, motivate us to explore multi view prediction.
+%This shows that single full-screenshot inference is inadequate to unleash the model's full potential. 
+This observation suggests that single full-screenshot inference inadequately unleashes the model's true grounding capability. 
+To verify this hypothesis, we conduct a preliminary experiment.
+%We further verify this by conducting a preliminary experiment. 
+Specifically, we randomly crop multiple 1280×720 sub-regions from the original ScreenSpot-Pro~\cite{sspro} screenshots, ensuring each view contains the target bounding box.
+We then predict coordinates for each view. 
+As shown in Figure~\ref{fig:analysis}(b), the pass@N accuracy (whether at least one prediction among N views is correct) consistently improves as the number of views increases. This motivate us to leverage multiple sub-regions during inference to improve prediction performance.
+
+%This paragraph introduce MVP pipeline
+Based on this observation, we propose the Multiple View Prediction (MVP) framework. It operates in two key stages: Attention-Guided View Proposal and Multi-Coordinate Clustering. First, MVP generates multiple views by cropping sub-regions from the original screenshot, using instruction-to-image attention scores to guide the process. These views maintain diversity while ensuring a high likelihood of containing the target UI elements. Each resulting view, along with the original image, undergoes independent inference to yield multiple coordinate predictions. Finally, the Multi-Coordinate Clustering component aggregates these results by performing spatial clustering on all predicted coordinates and outputs the centroid of the largest cluster as the final prediction.
+
+%This paragraph further explain why multi view can mitigate instability.
+The core intuition behind MVP is to mitigate prediction instability through multi-view integration. 
+%While we do not know the correctness of each view's predictions, 
+Although individual view predictions may be unreliable, they usually exhibit spatial patterns that
+the incorrect coordinates tend to scatter arbitrarily whereas the correct ones consistently fall within the target bounding box region. By clustering predictions from diverse views and identifying the densest cluster, MVP effectively distinguishes reliable coordinates from outliers, thereby enhancing grounding performance.
+
+% MVP consists of two key components: the Attention Heuristic Cropping and the Multi-Coordinates Clustering. The former leverages instruction-to-image attention scores from specific layers in the vision-language model, and then selects sub-regions that contain the highest number of top-k score visual tokens as different views. Models inference with these views and generate coordinates separately. The latter performs spatial clustering on the predicted coordinates, selecting the cluster containing the most prediction points and output the center coordinates. 
+
+%This paragraph show performance.
+MVP is a training-free framework that can be easily integrated with different grounding models, such as GTA1-7B~\cite{gta1}, UI-TARS-1.5-7B~\cite{ui-tars-15-seed}, and Qwen3VL-\{8B, 32B\}-Instruct~\cite{Qwen3VL}, spanning from 7B/8B to 32B parameter scales. Experimental results on ScreenSpot-Pro~\cite{sspro}, UI-Vision~\cite{uivision} and OS-World-G~\cite{osworldg} benchmarks demonstrate that MVP can significantly improve existing grounding models' performance.
+
+
+
+
+\noindent\textbf{Contributions.} Our contributions are threefold:
+\begin{itemize}
+
+\item  We identify coordinate prediction instability in grounding models, which severely undermines model performance.
+
+\item We propose Multi-View Prediction (MVP), a training-free framework that aggregates predictions from multiple attention-guided views through spatial clustering to mitigate prediction instability.
+
+%a training-free framework that aggregates multiple coordinate predictions from different cropped views of the original screenshot to enhance prediction stability and improve performance.
+
+\item We demonstrate that MVP can integrate with grounding models of different architectures, improving accuracy on three challenging grounding benchmarks.
+\end{itemize}

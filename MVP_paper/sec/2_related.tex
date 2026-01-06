@@ -1,0 +1,48 @@
+\section{Related Work}
+GUI grounding, the task of mapping natural language instructions to precise coordinates, is a core capability for developing GUI agents capable of real-world application.
+
+
+
+\begin{figure*}[t]
+  \centering
+  \begin{subfigure}{0.36\linewidth}
+    \includegraphics[width=\linewidth]{pics/prediction_analysis_pie_chart.png}
+    \caption{Prediction flips under visual perturbation.}
+    \label{fig:analysis_pie_chart}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}{0.31\linewidth}
+    \includegraphics[width=\linewidth]{pics/resolution_analysis.png}
+    \caption{ Instability intensifies with image resolution.}
+    \label{fig:analysis_resolution}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}{0.31\linewidth}
+    \includegraphics[width=\linewidth]{pics/bbox_area_analysis_2560x1440.png}
+    \caption{ Instability intensifies with smaller targets.}
+    \label{fig:analysis_aera}
+  \end{subfigure}
+  
+  \caption{We evaluate model instability by adding a 28-pixel border to ScreenSpot-Pro images and performing separate inference runs with GTA1-7B. (a) This minor visual perturbation causes 7.3\% of originally correct predictions to become incorrect, and 7.8\% of originally wrong predictions to become correct, revealing high sensitivity to input variations. (b) When analyzing the distance between the two predicted coordinates grouped by image resolution, we observe that instability increases significantly with higher resolutions. (c) Similarly, when grouping by the area of the target region, we find that instability is more pronounced for smaller UI elements.}
+  \label{fig:premi}
+\end{figure*}
+
+
+The task was first introduced by SeeClick~\cite{seeclick} through the ScreenSpot benchmark, showing that grounding pretraining improves end-to-end success across mobile, web, and desktop UIs scenarios. Subsequent research in this area can be broadly categorized into following directions:
+
+\begin{itemize}
+
+% \item \textbf{Supervised Fine-Tuning (SFT)} methods train LVLMs on large-scale GUI-specific datasets~\cite{ariaui, uground, osatlas, showui, uitars}. While this approach improves performance, it is still insufficient for practical applications and demands substantial computational resources for training. 
+% \item \textbf{Attention-Based Methods} leverage the intrinsic instruction–spatial alignment in vision-language models by deriving cross-attention scores from the LLM decoder to identify the most relevant visual patch and output its center coordinates directly~\cite{guiactor, v2p, attentiondriven}. Although these methods sometimes outperform SFT-based models, they heavily rely on the precision of attention scores, which limits their effectiveness with high-level instructions and generalizability to diverse scenarios. 
+% \item \textbf{Reinforcement Learning (RL)} methods further advance the performance through two primary strands: one directly optimizes coordinate prediction using rule-based rewards (e.g., Click Reward)~\cite{gta1, gaussion, guir1}, while another formulates grounding as a multi-step decision process~\cite{spatialgui, guispotlight, uiins, guiarp}, iteratively refining potential regions with reasoning before predicting final coordinates. Although RL methods achieve better performance, the models still struggle with high-resolution, dense scenarios.
+
+% \item \textbf{Test-time Scaling} methods leverage execution feedback from GUI agents to dynamically zoom into relevant sub-regions and improves performance~\cite{testtime}. However, this aimless "error-and-adjust" process for locating the correct view often leads to an unpredictable number of interaction rounds and risks the accumulation of errors. Furthermore, it heavily rely on immediate and accurate agent feedback, which limits its general deployment.
+
+\item \textbf{Direct Coordinate Optimization} methods enhance the model's grounding ability by supervised fine-tuning (SFT) on large-scale GUI-specific datasets~\cite{ariaui, uground, osatlas, showui, uitars}, or employing reinforcement learning (RL) with rule-based rewards~\cite{gta1, gaussion, guir1}, directly optimizing the output coordinates tokens. While these methods improve performance, they require substantial computational resources for training and still struggle with high resolution and small UI elements. Unlike these resource-intensive approaches, MVP requires no additional training. 
+
+\item \textbf{Iterative Zoom-in} methods reframe grounding as a multi-step decision process. These approaches either leverage execution feedback from GUI agents~\cite{testtime} or exploit the model's own reasoning capability~\cite{spatialgui, guispotlight, uiins, guiarp} to iteratively narrow down to a correct sub-region and then make the final prediction. However, these methods suffer from (1) error accumulation, where a mistake in an early step propagates to subsequent stages; (2) additional training or requiring feedback from external agents. In contrast to this sequential search for one optimal view, our MVP employs a parallel multi-view strategy, aggregating predictions via clustering, thereby avoiding error propagation. Meanwhile, MVP operates in a fully training-free manner without relying on any external feedback.
+\item \textbf{Attention-Based} methods leverage the intrinsic instruction–spatial alignment in LVLMs. They derive cross-attention scores from transformer layers to identify the most relevant visual patch and directly output its center coordinates~\cite{guiactor, v2p, attentiondriven}. However, these methods are highly dependent on the precision of the attention scores, limiting their generalizability across different instructions. Different from these methods, MVP preserves the standard text generation paradigm as well as better generalization across diverse scenarios.
+
+\end{itemize}
+
+% Different from Direct Coordinate Optimization methods and simply attention-based methods, our work reveals existing models' sensitivity to minor visual variations, proposing a training-free pipeline that leverages multi-view prediction to more fully exploit a model's inherent grounding potential. In contrast to the iterative zoom-in path that seeks one optimal view, our MVP employs a multi-view strategy, aggregating predictions via clustering to determine the answer.

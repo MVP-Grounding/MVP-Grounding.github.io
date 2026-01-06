@@ -1,0 +1,17 @@
+\section{Preliminary Analysis}
+
+In this section, we systematically diagnose the prediction instability in GUI grounding models. We experiment with GTA1-7B model~\cite{gta1} on the ScreenSpot-Pro benchmark~\cite{sspro} to demonstrate that this instability severely limits model reliability and then discuss on its underlying causes.
+
+\subsection{Single Inference is Unreliable}
+Our core finding is that grounding models are highly sensitive to visual perturbations, making single-inference results unreliable. Specifically, by adding a mere 28-pixel border (significantly smaller than the image resolution) to screenshots, we observe drastically different coordinate predictions from the same model: the average coordinate shift of 193 pixels far exceeds the size of typical UI elements in ScreenSpot-Pro (Figure~\ref{fig:premi}(b)).
+
+Crucially, this instability directly impacts accuracy. As shown in Figure~\ref{fig:premi}(a), the model achieved 57.5\% accuracy when considering at least one of the two predictions as correct—significantly higher than its 49.8\% single-prediction accuracy. This gap confirms that the model possesses the requisite capability, but single-view inference fails to harness it consistently.
+
+
+\subsection{What Drives Instability}
+\label{sec:reason}
+To understand what makes predictions unstable, we analyze how instability varies with input resolution and target UI element size. Figure \ref{fig:premi}(b) and \ref{fig:premi}(c) reveal a clear trend: instability intensifies dramatically for (1) high-resolution screenshots and (2) samples with small target elements.
+
+We attribute these challenges to both architectural and data-driven limitations. At the architectural level, the task of mapping high-dimensional visual patches to discrete coordinate tokens via a language head is inherently difficult, especially for high-resolution inputs where minor spatial changes yield vastly different token sequences. Additionally, current training datasets lack sufficient examples of high-resolution screenshots and small UI elements samples, creating a generalization shortfall at test time.
+
+This diagnosis naturally leads to our solution: if a single view is unreliable, but the model can sometimes predict correctly, then \textbf{aggregating predictions from multiple views} should yield more robust and accurate results.

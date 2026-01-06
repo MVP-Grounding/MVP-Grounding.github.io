@@ -1,0 +1,193 @@
+\section{Experiments}
+\begin{table*}[t]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{@{}lcccccc@{}}
+\toprule
+\textbf{Model} & \textbf{Text Match} & \textbf{Element Recognition} & \textbf{Layout Understanding} & \textbf{Fine-grained Manipulation} & \textbf{Refusal} & \textbf{Average} \\
+\midrule
+\rowcolor{gray!15} \multicolumn{7}{c}{\textbf{Closed-source Models}} \\
+Operator~\cite{operator} & 51.3 & 42.4 & 46.6 & 31.5 & - & 40.6 \\
+Gemini-2.5-pro~\cite{geminipro} & 59.8 & 45.5 & 49.0 & 33.6 & 38.9 & 45.2 \\
+Seed1.5-VL~\cite{seedvl1.5} & 73.9 & 66.7 & 69.6 & 47.0 & 18.5 & 62.9 \\
+\midrule
+\rowcolor{blue!15} \multicolumn{7}{c}{\textbf{Open-Source Models}} \\
+Qwen2.5-VL-72B~\cite{qwen25vl} & 52.6 & 74.6 & 74.7 & 55.3 & - & 62.2 \\
+% UI-TARS-7B~\cite{uitars} & 20.1 & 24.3 & 8.4 & 17.6\\
+UI-TARS-72B~\cite{uitars} & 69.4 & 60.6 & 62.9 & 45.6 & - & 57.1 \\
+UI-Venus-Ground-72B~\cite{uivenus} & 82.1 & 71.2 & 70.7 & 64.4 & - & 70.4 \\
+OS-Atlas-7B~\cite{osatlas} & 44.1 & 29.4 & 35.2 & 16.8 & 7.4 & 27.7 \\
+
+% \rowcolor{pink!10}
+UGround-V1-7B~\cite{uground} & 51.3 & 40.3 & 43.5 & 24.8 & - & 36.4 \\
+Aguvis-7B~\cite{aguvis} & 55.9 & 41.2 & 43.9 & 28.2 & - & 38.7 \\
+Jedi-7B~\cite{osworldg} & 65.9 & 55.5 & 57.7 & 46.9 & 7.4 & 54.1 \\
+GTA1-72B~\cite{gta1} & 57.9 & 76.9 & 77.3 & 66.7 & - & 66.7 \\
+GUI-Spotlight~\cite{guispotlight} & 68.2 & 60.6 & 63.2 & 45.6 & - & 62.7 \\
+\midrule
+UI-TARS-1.5-7B & 67.3 & 64.5 & 65.2 & 42.9 & - & 61.9 \\
++ MVP & 78.5\textcolor{red}{$\uparrow$11.2} & 69.1\textcolor{red}{$\uparrow$4.6} & 70.0\textcolor{red}{$\uparrow$4.8} & 59.7\textcolor{red}{$\uparrow$16.8} & - & 66.8\textcolor{red}{$\uparrow$4.9} \\
+GTA1-7B & 80.4 & 69.4 & 69.1 & 60.4 & - & 67.5 \\
++ MVP & 80.8\textcolor{red}{$\uparrow$0.4} & 71.6\textcolor{red}{$\uparrow$2.2} & 71.1\textcolor{red}{$\uparrow$2.0} & 61.0\textcolor{red}{$\uparrow$0.6} & - & 68.7\textcolor{red}{$\uparrow$1.2} \\
+Qwen3VL-8B-Instruct & 79.7 & 71.8 & 74.3 & 59.1 & - & 68.8 \\
++ MVP & 82.4\textcolor{red}{$\uparrow$2.7} & 76.7\textcolor{red}{$\uparrow$4.9} & 79.5\textcolor{red}{$\uparrow$5.2} & 61.7\textcolor{red}{$\uparrow$2.6} & - & 72.7\textcolor{red}{$\uparrow$3.9} \\
+Qwen3VL-32B-Instruct & 81.6 & 75.7 & 77.1 & 62.4 & - & 71.7 \\
++ MVP & 81.6 & 76.4\textcolor{red}{$\uparrow$0.7} & 77.5\textcolor{red}{$\uparrow$0.4} & 62.4 & - & 72.0\textcolor{red}{$\uparrow$0.3} \\
+\bottomrule
+\end{tabular}
+% \vspace{2pt}
+\caption{Evaluation results on the OS-World-G benchmark. The baseline results are evaluated using the corresponding official GitHub instructions, while other models' results are sourced directly from the UI-Venus Technical Report~\cite{uivenus}. These experimental results demonstrate the effectiveness of our MVP framework in real-world interactive scenarios.}
+\label{tab:osworld-g}
+\vspace{-10pt}
+\end{table*}
+\subsection{Models and Benchmarks}
+We conduct comprehensive evaluations across diverse grounding models and scales to assess the generalizability and effectiveness of our MVP framework, including UI-TARS-1.5-7B~\cite{ui-tars-15-seed}, GTA1-7B~\cite{gta1} and Qwen3VL-\{8B, 32B\}-Instruct~\cite{Qwen3VL}. The models are evaluated on three challenging GUI grounding benchmarks: (1) ScreenSpot-Pro~\cite{sspro}, a benchmark for evaluating visual grounding on high-resolution screenshots of professional software, covering application domains such as creative tools, office. (2) UI-Vision~\cite{uivision}, a diverse benchmark which samples from 83 applications across 6 domains with dense referring expressions platforms. (3) OS-World-G~\cite{osworldg}, a real-world interactive benchmark containing 564 screenshots from OSWorld~\cite{osworld}, focusing on operating-system tasks like file operations and app launching.
+
+\subsection{Implementation Details}
+We run 7B/8B model on 8 RTX4090 and 32B model on 4 A100. The view size $(h, w)$ is set to 1280 × 720 for all experiments, and then are resized to 2560 × 1440. The view number $m$ is set to 4 for GTA1-7B and UI-TARS-1.5-7B, and 2 for Qwen3VL-\{8B,32B\}-Instruct by default. For screenshots with resolution lower than 720P, we generate different views by adding 28-pixel black border to the left, right, upper and bottom of the image accordingly, or we apply the Attention Heuristic Cropping to crop views. According to FlexSelect~\cite{flexselect}, we choose attention scores from layer 20 of the language model for GTA1-7B and UI-TARS-1.5-7B, layer 24 for Qwen3VL-8B-Instruct and layer 48 for Qwen3VL-32B-Instruct to crop views. Top-100 visual tokens are selected to crop candidate regions. The K-means threshold $\tau$ is set to 14 pixels for all models. The evaluation prompt follows the model's official GitHub repository.
+\subsection{Evaluation Results}
+\paragraph{Results on ScreenSpot-Pro} Grounding models exhibit greater instability when processing high-resolution screenshots, leading to suboptimal performance. Our MVP framework effectively addresses this issue through its multi-view prediction mechanism, as demonstrated by consistent performance gains across all categories and model scales on ScreenSpot-Pro (Table~\ref{tab:sspro}). Specifically, MVP improves GTA1-7B by 11.9 points (49.8 → 61.7), UI-TARS-1.5-7B by 14.2 points (41.9 → 56.1), and Qwen3VL-8B-Instruct by 10.3 points (55.0 → 65.3). Most notably, when integrated with Qwen3VL-32B-Instruct, MVP elevates performance from 55.3 to 74.0, establishing new state-of-the-art results that surpass all existing open-source and closed-source models. These substantial improvements across diverse architectures confirm MVP's effectiveness in addressing the challenges of high-resolution GUI grounding through its multi-view prediction mechanism.
+
+\paragraph{Results on OS-World-G} As shown in Table~\ref{tab:osworld-g}, our MVP framework demonstrates consistent performance improvements on OS-World-G, enhancing the average scores of UI-TARS-1.5-7B by 4.9 points (61.9→66.8), GTA1-7B by 1.2 points (67.5→68.7), Qwen3VL-8B-Instruct by 3.9 points (68.8→72.7), and Qwen3VL-32B-Instruct by 0.3 points (71.7→72.0). These results validate MVP's effectiveness in real-world interactive scenarios. The smaller performance gains on OS-World-G relative to UI-Vision and ScreenSpot-Pro stem from its lower-resolution (720P/1080P), which inherently poses less instability to models and consequently limits improvement potential.
+
+\paragraph{Results on UI-Vision} As shown in Table~\ref{tab:ui-vision}, our MVP framework consistently enhances performance across all UI-Vision categories. For 7B models, MVP brings average gains of +3.4 (UI-TARS-1.5-7B) and +4.0 (GTA1-7B) points, with Qwen3VL-8B-Instruct achieving +4.7 points improvement. Most notably, Qwen3VL-32B-Instruct with MVP establishes new state-of-the-art performance with +7.7 points overall (36.4 → 44.1), surpassing even the 72B UI-Venus-Ground-72B (36.8) by +7.3 points. These results demonstrate that our method effectively improves model performance across different applications and platforms, showing strong generalizability across various domains.
+
+
+
+\begin{table}[t]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+\textbf{Model} & \textbf{Basic} & \textbf{Functional} & \textbf{Spatial} & \textbf{Average} \\
+\midrule
+\rowcolor{gray!15} \multicolumn{5}{c}{\textbf{Closed-source Models}} \\
+GPT-4o~\cite{gpt4o} & 1.6 & 1.5 & 1.0 & 1.4 \\
+Claude-3.7-Sonnet~\cite{Claude3.7} & 9.5 & 7.7 & 7.6 & 8.3 \\
+\midrule
+\rowcolor{blue!15} \multicolumn{5}{c}{\textbf{Open-Source Models}} \\
+Qwen2.5-VL-7B~\cite{qwen25vl} & 1.2 & 0.8 & 0.5 & 0.9 \\ 
+UI-TARS-7B~\cite{uitars} & 20.1 & 24.3 & 8.4 & 17.6 \\
+UI-TARS-72B~\cite{uitars} & 31.4 & 30.5 & 14.7 & 25.5 \\
+UI-Venus-Ground-7B~\cite{uivenus} & 36.1 & 32.8 & 11.9 & 26.5 \\
+UI-Venus-Ground-72B~\cite{uivenus} & 45.6 & 42.3 & 23.7 & 36.8 \\
+OS-Atlas-7B~\cite{osatlas} & 12.2 & 11.2 & 3.7 & 9.0 \\
+Phi-Ground-7B-16C-DPO~\cite{phiground} & 36.8 & 37.1 & 7.6 & 27.2 \\
+UGround-V1-7B~\cite{uground} & 15.4 & 17.1 & 6.3 & 12.9 \\
+HyperClick~\cite{hyperclick} & 35.3 & 32.1 & 11.0 & 25.7 \\
+GUI-Spotlight~\cite{guispotlight} & 32.1 & 30.2 & 9.1 & 23.4 \\
+\midrule
+UI-TARS-1.5-7B & 29.3 & 27.4 & 10.0 & 22.2 \\
++ MVP & 31.8\textcolor{red}{$\uparrow$2.5} & 31.8\textcolor{red}{$\uparrow$4.4} & 13.2\textcolor{red}{$\uparrow$3.2} & 25.6\textcolor{red}{$\uparrow$3.4} \\
+GTA1-7B & 35.2 & 32.9 & 11.5 & 26.5 \\
++ MVP & 38.9\textcolor{red}{$\uparrow$3.7} & 37.7\textcolor{red}{$\uparrow$4.8} & 14.9\textcolor{red}{$\uparrow$3.4} & 30.5\textcolor{red}{$\uparrow$4.0} \\
+Qwen3VL-8B-Instruct & 32.9 & 34.1 & 14.7 & 27.2 \\
++ MVP & 38.3\textcolor{red}{$\uparrow$5.4} & 38.8\textcolor{red}{$\uparrow$4.7} & 18.7\textcolor{red}{$\uparrow$4.0} & 31.9\textcolor{red}{$\uparrow$4.7} \\
+Qwen3VL-32B-Instruct & 43.9 & 42.8 & 22.4 & 36.4 \\
++ MVP & \textbf{49.4}\textcolor{red}{$\uparrow$5.5} & \textbf{52.0}\textcolor{red}{$\uparrow$9.2} & \textbf{30.8}\textcolor{red}{$\uparrow$8.4} & \textbf{44.1}\textcolor{red}{$\uparrow$7.7} \\
+\bottomrule
+\end{tabular}
+%\vspace{6pt}
+\caption{Evaluation results on UI-Vision. Baseline models are evaluated using the official GitHub instructions, while results for other models are taken directly from the UI-Vision leaderboard~\cite{uivision}. Our method effectively improves model performance across diverse applications, exhibiting strong generalizability.}
+\label{tab:ui-vision}
+\end{table}
+
+
+\subsection{Ablations}
+\paragraph{Influence of Attention-Guided View Proposal}
+This study ablates the Attention-Guided View Proposal module, which generates diverse views by preserving semantically rich regions at a reduced input resolution. We compare it against a Border Padding strategy that creates views by adding 28-pixel borders around the original screenshot. Results in Table~\ref{tab:compare_AHC} show that while Border Padding improves upon the baseline, our Attention-Guided View Proposal method delivers a significantly larger gain. This demonstrates that our attention-guided strategy for selecting informative sub-regions is effective on view generation.
+
+\begin{table}[t]
+\centering
+\footnotesize
+\begin{tabular}{ccc}
+\toprule
+\textbf{View Proposal Method} & \textbf{Number of Views} & \textbf{SS-Pro Avg.} \\
+\midrule
+Baseline (Single Full Image) & -- & 49.8 \\
+Border Padding & 4 & 57.3 \\
+Attention-Guided View Proposal & 4 & \textbf{61.7} \\
+
+\bottomrule
+\end{tabular}
+\caption{Comparison of view generation methods on the ScreenSpot-Pro benchmark using GTA1-7B. Our Attention Heuristic Cropping method significantly outperforms both the Border Padding strategy and the single full image baseline, underscoring the importance of content-aware cropping over simple spatial augmentation.}
+\vspace{-10pt}
+\label{tab:compare_AHC}
+\end{table}
+
+\paragraph{Influence of Multi-Coordinate Clustering}
+This ablation study evaluates the efficacy of our Multi-Coordinate Clustering module in mitigating prediction instability by aggregating coordinates from multiple views. We compare it against two alternative strategies: (1) randomly selecting one prediction, and (2) averaging over all predicted coordinates. As presented in Table~\ref{tab:compare_aggragation}, our clustering-based method achieves a SS-Pro Avg. of 61.7, substantially outperforming both alternatives and the baseline. This result confirms that identifying spatial consensus through clustering is a more effective aggregation strategy than simple averaging or random selection for determining the final prediction, since incorrect predictions may scatter arbitrarily, correct ones are spatially consistent as they all fall within the target bounding box.
+
+\begin{table}[t]
+\centering
+\footnotesize
+\begin{tabular}{ccc}
+\toprule
+\textbf{Aggregation Method} & \textbf{View Number} & \textbf{SS-Pro Avg.} \\
+\midrule
+Baseline (Single Full Image) & -- & 49.8 \\
+Average of Coordinates & 4 & 46.6 \\
+Random Selection & 4 & 55.7 \\
+Multi-Coordinate Clustering & 4 & \textbf{61.7} \\
+\bottomrule
+\end{tabular}
+\caption{Comparison of aggregation strategies on the ScreenSpot-Pro benchmark using GTA1-7B. Our proposed Multi-Coordinates Clustering method demonstrates superior performance, highlighting the importance of robust spatial consensus over naive averaging or random selection.}
+\vspace{-10pt}
+\label{tab:compare_aggragation}
+\end{table}
+
+\paragraph{Influence of View Resizing}
+This experiment evaluates the impact of resizing cropped views to a higher resolution (2× of the original size) to enhance the visibility of small target UI elements, thereby mitigating model instability on small regions. We compare the performance with and without this resizing operation. As shown in Table~\ref{tab:compare_resize}, resizing improves the SS-Pro Avg. score by 2.6 points (from 59.1 to 61.7), confirming its contribution to final performance.
+
+\begin{table}[t]
+\centering
+\footnotesize
+\begin{tabular}{ccc}
+\toprule
+\textbf{Method} & \textbf{Number of Views} & \textbf{SS-Pro Avg.} \\
+\midrule
+Baseline (Single Full Image) & -- & 49.8 \\
+Without Resizing & 4 & 59.1 \\
+With Resizing & 4 & \textbf{61.7} \\
+\bottomrule
+\end{tabular}
+\caption{Ablation study on view resizing using the ScreenSpot-Pro benchmark and GTA1-7B. Enlarging the cropped views to twice their original size improves the visibility of target UI elements and yields a performance gain of 2.6 points.}
+\label{tab:compare_resize}
+\vspace{-12pt}
+\end{table}
+
+
+
+
+\paragraph{Influence of View Number}
+We compare the performance under different view numbers. As shown in Figure~\ref{fig:view_number_effect}, we observe that increasing the number of views does not consistently lead to performance improvements. Although different views generate distinct coordinates, they tend to cluster around several fixed positions. Consequently, adding more views has limited impact on the final clustering results while increases the time cost. We suggest 4 views as the optimal configuration.
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=0.9\linewidth]{pics/sspro_avg_score_vs_view_number.png}
+    \vspace{-10pt}
+    \caption{We evaluate GTA1-7B on ScreenSpot-Pro under different view number. Increasing the number of views does not consistently lead to performance improvements. We suggest 4 views as the optimal configuration}
+    \label{fig:view_number_effect}
+    \vspace{-10pt}
+\end{figure}
+
+% \begin{table}[H]
+% \centering
+% \footnotesize
+% \setlength{\tabcolsep}{16pt}
+% \begin{tabular}{ccc}
+% \toprule
+% \textbf{Method} & \textbf{View Number} & \textbf{SS-Pro Avg.} \\
+% \midrule
+% MVP & 3 & 61.0 \\
+% MVP & 5 & 61.7  \\
+% MVP & 7 & 61.5  \\
+% MVP & 11 & 60.6  \\
+% Origin & 1 & 49.8  
+% \end{tabular}
+% \caption{Comparison when using different view number.}
+% \label{tab:view_number}
+% \end{table}
+
