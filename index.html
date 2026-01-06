@@ -1,142 +1,89 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
   <meta charset="utf-8">
+  <!-- Meta tags for social media banners -->
+  <meta name="description" content="MVP: Multiple View Prediction Improves GUI Grounding - A training-free framework that enhances GUI grounding through multi-view inference">
+  <meta property="og:title" content="MVP: Multiple View Prediction Improves GUI Grounding"/>
+  <meta property="og:description" content="A training-free framework that enhances GUI grounding through multi-view inference, addressing coordinate prediction instability"/>
+  <meta property="og:url" content="https://zjuscl.github.io/MVP-Grounding/"/>
+  <meta property="og:image" content="static/images/output.png" />
+  <meta property="og:image:width" content="1200"/>
+  <meta property="og:image:height" content="630"/>
+
+  <meta name="twitter:title" content="MVP: Multiple View Prediction Improves GUI Grounding">
+  <meta name="twitter:description" content="A training-free framework that enhances GUI grounding through multi-view inference">
+  <meta name="twitter:image" content="static/images/output.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="keywords" content="GUI grounding, multi-view prediction, GUI agents, computer vision, vision-language models">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <!-- Primary Meta Tags (populated by render.js) -->
-  <meta name="title" content="">
-  <meta name="description" content="">
-  <meta name="keywords" content="">
-  <meta name="author" content="">
-  <meta name="robots" content="index, follow">
-  <meta name="language" content="English">
-
-  <!-- Open Graph / Facebook -->
-  <meta property="og:type" content="article">
-  <meta property="og:site_name" content="">
-  <meta property="og:title" content="">
-  <meta property="og:description" content="">
-  <meta property="og:url" content="">
-  <meta property="og:image" content="">
-  <meta property="og:image:width" content="1200">
-  <meta property="og:image:height" content="630">
-  <meta property="og:image:alt" content="">
-  <meta property="article:published_time" content="">
-  <meta property="article:author" content="">
-  <meta property="article:section" content="Research">
-
-  <!-- Twitter -->
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:site" content="">
-  <meta name="twitter:creator" content="">
-  <meta name="twitter:title" content="">
-  <meta name="twitter:description" content="">
-  <meta name="twitter:image" content="">
-  <meta name="twitter:image:alt" content="">
-
-  <!-- Academic/Research Specific -->
-  <meta name="citation_title" content="">
-  <meta name="citation_publication_date" content="">
-  <meta name="citation_conference_title" content="">
-
-  <!-- Additional SEO -->
-  <meta name="theme-color" content="#2563eb">
-  <meta name="msapplication-TileColor" content="#2563eb">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
-
-  <!-- Preconnect for performance -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="preconnect" href="https://ajax.googleapis.com">
-  <link rel="preconnect" href="https://cdn.jsdelivr.net">
-
-  <title>Academic Project Page</title>
-
-  <!-- Favicon and App Icons -->
+  <title>MVP: Multiple View Prediction Improves GUI Grounding</title>
   <link rel="icon" type="image/x-icon" href="static/images/favicon.ico">
-  <link rel="apple-touch-icon" href="static/images/favicon.ico">
+  <link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans|Castoro"
+  rel="stylesheet">
 
-  <!-- Critical CSS -->
   <link rel="stylesheet" href="static/css/bulma.min.css">
+  <link rel="stylesheet" href="static/css/bulma-carousel.min.css">
+  <link rel="stylesheet" href="static/css/bulma-slider.min.css">
+  <link rel="stylesheet" href="static/css/fontawesome.all.min.css">
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
   <link rel="stylesheet" href="static/css/index.css">
 
-  <!-- Non-critical CSS - Load asynchronously -->
-  <link rel="preload" href="static/css/bulma-carousel.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-  <link rel="preload" href="static/css/bulma-slider.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-  <link rel="preload" href="static/css/fontawesome.all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-  <link rel="preload" href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-
-  <!-- Fallback for browsers that don't support preload -->
-  <noscript>
-    <link rel="stylesheet" href="static/css/bulma-carousel.min.css">
-    <link rel="stylesheet" href="static/css/bulma-slider.min.css">
-    <link rel="stylesheet" href="static/css/fontawesome.all.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
-  </noscript>
-
-  <!-- Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-
-  <!-- Configuration (EDIT THIS FILE) -->
-  <script src="config.js"></script>
-
-  <!-- Defer JavaScript -->
-  <script defer src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
   <script defer src="static/js/fontawesome.all.min.js"></script>
-  <script defer src="static/js/bulma-carousel.min.js"></script>
-  <script defer src="static/js/bulma-slider.min.js"></script>
-  <script defer src="static/js/index.js"></script>
-  <script defer src="static/js/render.js"></script>
+  <script src="static/js/bulma-carousel.min.js"></script>
+  <script src="static/js/bulma-slider.min.js"></script>
+  <script src="static/js/index.js"></script>
 </head>
 <body>
 
-  <!-- Scroll to Top Button -->
-  <button class="scroll-to-top" onclick="scrollToTop()" title="Scroll to top" aria-label="Scroll to top">
-    <i class="fas fa-chevron-up"></i>
-  </button>
-
-  <!-- More Works Dropdown -->
-  <div class="more-works-container">
-    <button class="more-works-btn" onclick="toggleMoreWorks()" title="View More Works from Our Lab">
-      <i class="fas fa-flask"></i>
-      More Works
-      <i class="fas fa-chevron-down dropdown-arrow"></i>
-    </button>
-    <div class="more-works-dropdown" id="moreWorksDropdown">
-      <div class="dropdown-header">
-        <h4>More Works from Our Lab</h4>
-        <button class="close-btn" onclick="toggleMoreWorks()">
-          <i class="fas fa-times"></i>
-        </button>
-      </div>
-      <div class="works-list" id="works-list">
-        <!-- Populated by render.js from config.js -->
-      </div>
-    </div>
-  </div>
-
-  <main id="main-content">
-
-  <!-- Hero Section -->
   <section class="hero">
     <div class="hero-body">
       <div class="container is-max-desktop">
         <div class="columns is-centered">
           <div class="column has-text-centered">
-            <h1 class="title is-1 publication-title" id="paper-title">Loading...</h1>
-            <div class="is-size-5 publication-authors" id="authors-list">
-              <!-- Populated by render.js -->
+            <h1 class="title is-1 publication-title">MVP: Multiple View Prediction Improves GUI Grounding</h1>
+            <div class="is-size-5 publication-authors">
+              <span class="author-block"><p>Yunzhu Zhang<sup>1</sup>,</p></span>
+              <span class="author-block"><p>Zeyu Pan<sup>2</sup>,</p></span>
+              <span class="author-block"><p>Zhengwen Zeng<sup>3</sup>,</p></span>
+              <span class="author-block"><p>Shuheng Shen<sup>3</sup>,</p></span>
+              <span class="author-block"><p>Changhua Meng<sup>3</sup>,</p></span>
+              <span class="author-block"><p>Linchao Zhu<sup>1,†</sup></p></span>
             </div>
 
-            <div class="is-size-5 publication-authors" id="affiliation">
-              <!-- Populated by render.js -->
+            <div class="is-size-5 publication-authors">
+              <span class="author-block"><sup>1</sup>Zhejiang University</span>
+              <span class="author-block"><sup>2</sup>Hangzhou Dianzi University</span>
+              <span class="author-block"><sup>3</sup>Ant Group</span>
+              <span class="eql-cntrb"><small><br><sup>†</sup>Corresponding Author</small></span>
             </div>
 
             <div class="column has-text-centered">
-              <div class="publication-links" id="publication-links">
-                <!-- Populated by render.js -->
+              <div class="publication-links">
+                <span class="link-block">
+                  <a href="https://github.com/ZJUSCL/MVP" target="_blank"
+                  class="external-link button is-normal is-rounded is-dark">
+                    <span class="icon"><i class="fab fa-github"></i></span>
+                    <span>Code</span>
+                  </a>
+                </span>
+                <span class="link-block">
+                  <a href="https://arxiv.org/abs/2512.08529" target="_blank"
+                  class="external-link button is-normal is-rounded is-dark">
+                    <span class="icon"><i class="ai ai-arxiv"></i></span>
+                    <span>arXiv</span>
+                  </a>
+                </span>
+                <span class="link-block">
+                  <a href="https://arxiv.org/pdf/2512.08529" target="_blank"
+                  class="external-link button is-normal is-rounded is-dark">
+                    <span class="icon"><i class="fas fa-file-pdf"></i></span>
+                    <span>Paper</span>
+                  </a>
+                </span>
               </div>
             </div>
           </div>
@@ -145,67 +92,192 @@
     </div>
   </section>
 
-  <!-- Teaser Video -->
-  <section class="hero teaser">
-    <div class="container is-max-desktop">
-      <div class="hero-body">
-        <video poster="" id="teaser-video" autoplay controls muted loop height="100%" preload="metadata">
-          <source src="" type="video/mp4">
-        </video>
-        <h2 class="subtitle has-text-centered" id="teaser-caption"></h2>
-      </div>
-    </div>
-  </section>
-
-  <!-- Abstract -->
-  <section class="section hero is-light">
-    <div class="container is-max-desktop">
-      <div class="columns is-centered has-text-centered">
-        <div class="column is-four-fifths">
-          <h2 class="title is-3">Abstract</h2>
-          <div class="content has-text-justified" id="abstract-text">
-            <!-- Populated by render.js -->
-          </div>
+<!-- Paper abstract -->
+<section class="section hero">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-four-fifths">
+        <h2 class="title is-3">Abstract</h2>
+        <div class="content has-text-justified">
+          <p>
+            GUI grounding, which translates natural language instructions into precise pixel coordinates, is essential for developing practical GUI agents. However, we observe that existing grounding models exhibit significant <strong>coordinate prediction instability</strong>—minor visual perturbations (e.g., cropping a few pixels) can drastically alter predictions, flipping results between correct and incorrect. This instability severely undermines model performance, especially for samples with high-resolution and small UI elements.
+            <br><br>
+            To address this issue, we propose <strong>Multi-View Prediction (MVP)</strong>, a training-free framework that enhances grounding performance through multi-view inference. Our key insight is that while single-view predictions may be unstable, aggregating predictions from multiple carefully cropped views can effectively distinguish correct coordinates from outliers. MVP comprises two components: (1) <strong>Attention-Guided View Proposal</strong>, which derives diverse views guided by instruction-to-image attention scores, and (2) <strong>Multi-Coordinates Clustering</strong>, which ensembles predictions by selecting the centroid of the densest spatial cluster.
+            <br><br>
+            Extensive experiments demonstrate MVP's effectiveness across various models and benchmarks. Notably, on ScreenSpot-Pro, MVP boosts UI-TARS-1.5-7B to 56.1%, GTA1-7B to 61.7%, Qwen3VL-8B-Instruct to 65.3%, and Qwen3VL-32B-Instruct to 74.0%.
+          </p>
         </div>
+
+        <figure style="margin: 2rem auto; max-width: 100%;">
+          <img src="./static/images/fig1.pdf" alt="MVP framework overview" style="width: 100%; height: auto; display: block; margin: 0 auto;">
+          <figcaption class="has-text-justified" style="margin-top: 1rem; font-size: 0.9rem; line-height: 1.5;">
+            <p style="margin-bottom: 0.8rem;">Figure 1: <strong>Overview of MVP Framework.</strong> Given a high-resolution screenshot and user instruction, MVP first generates multiple cropped views using attention-guided view proposal. Each view is processed independently by the grounding model to produce coordinate predictions. These predictions are then aggregated through multi-coordinate clustering to produce the final robust prediction.</p>
+          </figcaption>
+        </figure>
       </div>
     </div>
-  </section>
-
-  <!-- Content Sections (text + image) -->
-  <div id="sections-container">
-    <!-- Populated by render.js from config.js -->
   </div>
+</section>
+<!-- End paper abstract -->
 
-  <!-- BibTeX -->
-  <section class="section" id="BibTeX">
-    <div class="container is-max-desktop content">
-      <div class="bibtex-header">
-        <h2 class="title">BibTeX</h2>
-        <button class="copy-bibtex-btn" onclick="copyBibTeX()" title="Copy BibTeX to clipboard">
-          <i class="fas fa-copy"></i>
-          <span class="copy-text">Copy</span>
-        </button>
+<section class="section hero">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-four-fifths">
+        <h2 class="title is-3">Coordinate Prediction Instability</h2>
+        <div class="content has-text-justified">
+          <p>
+            Existing GUI grounding models exhibit significant coordinate prediction instability. Minor visual perturbations, such as cropping a few pixels, can drastically alter predictions—flipping results between correct and incorrect. This instability is particularly severe for high-resolution screenshots with small UI elements. Our analysis reveals that single-view predictions are highly sensitive to input variations, making current models unreliable for practical GUI agent applications.
+          </p>
+        </div>
+
+        <figure style="margin: 2rem auto; max-width: 100%;">
+          <img src="./static/images/resolution_analysis.png" alt="Resolution analysis" style="width: 70%; height: auto; display: block; margin: 0 auto;">
+          <figcaption class="has-text-justified" style="margin-top: 1rem; font-size: 0.9rem; line-height: 1.5;">
+            <p style="margin-bottom: 0.8rem;">Figure 2: <strong>Impact of Resolution on Grounding Performance.</strong> Higher resolutions lead to more unstable predictions due to the increased number of small UI elements and context complexity.</p>
+          </figcaption>
+        </figure>
       </div>
-      <pre><code id="bibtex-code"></code></pre>
     </div>
-  </section>
+  </div>
+</section>
 
-  </main>
+<section class="section hero">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-four-fifths">
+        <h2 class="title is-3">Attention-Guided View Proposal</h2>
+        <div class="content has-text-justified">
+          <p>
+            To generate informative views, we leverage the attention maps from vision-language models. The attention scores between the instruction and image regions guide us to identify and crop relevant areas. This attention-guided approach ensures that multiple views focus on different parts of the screen while maintaining relevance to the grounding task, enabling more robust coordinate predictions.
+          </p>
+        </div>
 
-  <footer class="footer">
-    <div class="container">
-      <div class="columns is-centered">
-        <div class="column is-8">
-          <div class="content">
-            <p>
-              This page was built using the <a href="https://github.com/eliahuhorwitz/Academic-project-page-template" target="_blank">Academic Project Page Template</a> which was adopted from the <a href="https://nerfies.github.io" target="_blank">Nerfies</a> project page.
-              You are free to borrow the source code of this website, we just ask that you link back to this page in the footer. <br> This website is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/" target="_blank">Creative Commons Attribution-ShareAlike 4.0 International License</a>.
-            </p>
-          </div>
+        <figure style="margin: 2rem auto; max-width: 100%;">
+          <img src="./static/images/arch.pdf" alt="Architecture diagram" style="width: 90%; height: auto; display: block; margin: 0 auto;">
+          <figcaption class="has-text-justified" style="margin-top: 1rem; font-size: 0.9rem; line-height: 1.5;">
+            <p style="margin-bottom: 0.8rem;">Figure 3: <strong>Architecture of Attention-Guided View Proposal.</strong> The module uses cross-modal attention to identify regions most relevant to the instruction and generates diverse cropped views for multi-view inference.</p>
+          </figcaption>
+        </figure>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section hero">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-four-fifths">
+        <h2 class="title is-3">Multi-Coordinates Clustering</h2>
+        <div class="content has-text-justified">
+          <p>
+            After obtaining predictions from multiple views, we aggregate them through spatial clustering. By clustering all predicted coordinates, we can identify the densest region where consistent predictions converge. The centroid of this cluster is selected as the final prediction, effectively filtering out outliers and unstable predictions from individual views.
+          </p>
+        </div>
+
+        <figure style="margin: 2rem auto; max-width: 100%;">
+          <img src="./static/images/prediction_analysis_pie_chart.png" alt="Prediction analysis" style="width: 70%; height: auto; display: block; margin: 0 auto;">
+          <figcaption class="has-text-justified" style="margin-top: 1rem; font-size: 0.9rem; line-height: 1.5;">
+            <p style="margin-bottom: 0.8rem;">Figure 4: <strong>Distribution Analysis of Coordinate Predictions.</strong> The clustering process identifies the densest region of consistent predictions while filtering out outliers.</p>
+          </figcaption>
+        </figure>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section hero">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-four-fifths">
+        <h2 class="title is-3">Experimental Results</h2>
+        <div class="content has-text-justified">
+          <p>
+            MVP significantly improves performance across various foundation models. On the ScreenSpot-Pro benchmark, our method achieves consistent improvements across all tested models:
+            <br><br>
+            <strong>UI-TARS-1.5-7B:</strong> 49.3% → 56.1% (+6.8%)<br>
+            <strong>GTA1-7B:</strong> 54.9% → 61.7% (+6.8%)<br>
+            <strong>Qwen3VL-8B-Instruct:</strong> 59.6% → 65.3% (+5.7%)<br>
+            <strong>Qwen3VL-32B-Instruct:</strong> 68.3% → 74.0% (+5.7%)
+          </p>
+        </div>
+
+        <figure style="margin: 2rem auto; max-width: 100%;">
+          <img src="./static/images/multi_model_radar_comparison_grouped.png" alt="Multi-model comparison" style="width: 90%; height: auto; display: block; margin: 0 auto;">
+          <figcaption class="has-text-justified" style="margin-top: 1rem; font-size: 0.9rem; line-height: 1.5;">
+            <p style="margin-bottom: 0.8rem;">Figure 5: <strong>Performance Comparison Across Different Foundation Models.</strong> MVP consistently improves grounding performance across various model architectures without requiring additional training.</p>
+          </figcaption>
+        </figure>
+
+        <figure style="margin: 2rem auto; max-width: 100%;">
+          <img src="./static/images/sspro_avg_score_vs_view_number.png" alt="View number analysis" style="width: 80%; height: auto; display: block; margin: 0 auto;">
+          <figcaption class="has-text-justified" style="margin-top: 1rem; font-size: 0.9rem; line-height: 1.5;">
+            <p style="margin-bottom: 0.8rem;">Figure 6: <strong>Average Accuracy vs Number of Views.</strong> Using 3-5 views achieves the best balance between performance and computational cost on ScreenSpot-Pro benchmark.</p>
+          </figcaption>
+        </figure>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section hero">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-four-fifths">
+        <h2 class="title is-3">Qualitative Results</h2>
+        <div class="content has-text-justified">
+          <p>
+            The figure visualizes qualitative examples of MVP improving GUI grounding. For each example, we show the original screenshot with the instruction, attention heatmap, cropped views, and final predictions. Our method successfully handles various challenges including small UI elements, complex layouts, and ambiguous instructions.
+          </p>
+        </div>
+
+        <figure style="margin: 2rem auto; max-width: 100%;">
+          <img src="./static/images/example1.pdf" alt="Qualitative examples" style="width: 100%; height: auto; display: block; margin: 0 auto;">
+          <figcaption class="has-text-justified" style="margin-top: 1rem; font-size: 0.9rem; line-height: 1.5;">
+            <p style="margin-bottom: 0.8rem;">Figure 7: <strong>Qualitative Examples.</strong> Demonstrating MVP's effectiveness on challenging GUI grounding cases with small elements and complex layouts.</p>
+          </figcaption>
+        </figure>
+
+        <figure style="margin: 2rem auto; max-width: 100%;">
+          <img src="./static/images/example2.pdf" alt="More examples" style="width: 100%; height: auto; display: block; margin: 0 auto;">
+        </figure>
+        <figure style="margin: 2rem auto; max-width: 100%;">
+          <img src="./static/images/example3.pdf" alt="Additional examples" style="width: 100%; height: auto; display: block; margin: 0 auto;">
+        </figure>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!--BibTex citation -->
+<section class="section" id="BibTeX">
+  <div class="container is-max-desktop content">
+    <h2 class="title">BibTeX</h2>
+    <pre><code>@article{zhang2025mvp,
+  title={MVP: Multiple View Prediction Improves GUI Grounding},
+  author={Zhang, Yunzhu and Pan, Zeyu and Zeng, Zhengwen and Shen, Shuheng and Meng, Changhua and Zhu, Linchao},
+  journal={arXiv preprint arXiv:2512.08529},
+  year={2025},
+  url={https://github.com/ZJUSCL/MVP}
+}</code></pre>
+  </div>
+</section>
+<!--End BibTex citation -->
+
+<footer class="footer">
+  <div class="container">
+    <div class="columns is-centered">
+      <div class="column is-8">
+        <div class="content">
+          <p>
+            This page was built using the <a href="https://github.com/eliahuhorwitz/Academic-project-page-template" target="_blank">Academic Project Page Template</a> which was adopted from the <a href="https://nerfies.github.io" target="_blank">Nerfies</a> project page.
+            You are free to borrow the source code of this website, we just ask that you link back to this page in the footer. <br> This website is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/" target="_blank">Creative Commons Attribution-ShareAlike 4.0 International License</a>.
+          </p>
         </div>
       </div>
     </div>
-  </footer>
+  </div>
+</footer>
 
 </body>
 </html>
