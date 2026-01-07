@@ -93,13 +93,17 @@
         <h2 class="title is-3">Abstract</h2>
         <div class="content has-text-justified">
           <p>
-            We propose <strong>Multi-View Prediction (MVP)</strong>, a training-free framework that enhances models' GUI Grounding probability. 
-            \<br>
-            \<br>
+            We identify the <strong>Prediction Instability</strong> issue of existing GUI grounding models : They are highly sensitive to input visual variations, making single-view predictions unreliable and limiting their performance.
+            <br>
+            <br>
+            Based on this, We propose <strong>Multi-View Prediction (MVP)</strong>, a training-free framework that enhances models' GUI Grounding probability. 
             MVP crops different regions from original screenshot to get different prediction and then cluster them through k-means. The final result is decided by the centroid coordinate of the largest cluster. 
-            \<br>
-            \<br>
+            <br>
+            <br>
             MVP comprises two components: (1) <strong>Attention-Guided View Proposal</strong>, which derives diverse views guided by instruction-to-image attention scores, and (2) <strong>Multi-Coordinates Clustering</strong>, which ensembles predictions by selecting the centroid of the densest spatial cluster.
+            <br>
+            <br>
+            Extensive experiments demonstrate MVP's effectiveness across various models and benchmarks.
           </p>
         </div>
 
