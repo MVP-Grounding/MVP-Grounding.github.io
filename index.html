@@ -73,13 +73,6 @@
                 <span class="link-block">
                   <a href="https://arxiv.org/abs/2512.08529" target="_blank"
                   class="external-link button is-normal is-rounded is-dark">
-                    <span class="icon"><i class="ai ai-arxiv"></i></span>
-                    <span>arXiv</span>
-                  </a>
-                </span>
-                <span class="link-block">
-                  <a href="https://arxiv.org/pdf/2512.08529" target="_blank"
-                  class="external-link button is-normal is-rounded is-dark">
                     <span class="icon"><i class="fas fa-file-pdf"></i></span>
                     <span>Paper</span>
                   </a>
@@ -100,16 +93,18 @@
         <h2 class="title is-3">Abstract</h2>
         <div class="content has-text-justified">
           <p>
-            GUI grounding, which translates natural language instructions into precise pixel coordinates, is essential for developing practical GUI agents. However, we observe that existing grounding models exhibit significant <strong>coordinate prediction instability</strong>—minor visual perturbations (e.g., cropping a few pixels) can drastically alter predictions, flipping results between correct and incorrect. This instability severely undermines model performance, especially for samples with high-resolution and small UI elements.
-            <br><br>
-            To address this issue, we propose <strong>Multi-View Prediction (MVP)</strong>, a training-free framework that enhances grounding performance through multi-view inference. Our key insight is that while single-view predictions may be unstable, aggregating predictions from multiple carefully cropped views can effectively distinguish correct coordinates from outliers. MVP comprises two components: (1) <strong>Attention-Guided View Proposal</strong>, which derives diverse views guided by instruction-to-image attention scores, and (2) <strong>Multi-Coordinates Clustering</strong>, which ensembles predictions by selecting the centroid of the densest spatial cluster.
-            <br><br>
-            Extensive experiments demonstrate MVP's effectiveness across various models and benchmarks. Notably, on ScreenSpot-Pro, MVP boosts UI-TARS-1.5-7B to 56.1%, GTA1-7B to 61.7%, Qwen3VL-8B-Instruct to 65.3%, and Qwen3VL-32B-Instruct to 74.0%.
+            We propose <strong>Multi-View Prediction (MVP)</strong>, a training-free framework that enhances models' GUI Grounding probability. 
+            \<br>
+            \<br>
+            MVP crops different regions from original screenshot to get different prediction and then cluster them through k-means. The final result is decided by the centroid coordinate of the largest cluster. 
+            \<br>
+            \<br>
+            MVP comprises two components: (1) <strong>Attention-Guided View Proposal</strong>, which derives diverse views guided by instruction-to-image attention scores, and (2) <strong>Multi-Coordinates Clustering</strong>, which ensembles predictions by selecting the centroid of the densest spatial cluster.
           </p>
         </div>
 
         <figure style="margin: 2rem auto; max-width: 100%;">
-          <img src="./static/images/fig1.pdf" alt="MVP framework overview" style="width: 100%; height: auto; display: block; margin: 0 auto;">
+          <img src="./static/images/arch.pdf" alt="MVP framework overview" style="width: 100%; height: auto; display: block; margin: 0 auto;">
           <figcaption class="has-text-justified" style="margin-top: 1rem; font-size: 0.9rem; line-height: 1.5;">
             <p style="margin-bottom: 0.8rem;">Figure 1: <strong>Overview of MVP Framework.</strong> Given a high-resolution screenshot and user instruction, MVP first generates multiple cropped views using attention-guided view proposal. Each view is processed independently by the grounding model to produce coordinate predictions. These predictions are then aggregated through multi-coordinate clustering to produce the final robust prediction.</p>
           </figcaption>
